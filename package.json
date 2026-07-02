@@ -1,0 +1,12 @@
+{
+  "name": "capstone-root",
+  "version": "1.0.0",
+  "description": "Root workspace runner for Capstone Project",
+  "scripts": {
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:rider": "npm --prefix rider-app run dev",
+    "dev:driver": "npm --prefix driver-app run dev",
+    "dev:apps": "npx concurrently --kill-others \"npm --prefix rider-app run dev\" \"npm --prefix driver-app run dev\"",
+    "dev": "npx concurrently --kill-others \"npm --prefix backend run dev\" \"npm --prefix rider-app run dev\" \"npm --prefix driver-app run dev\""
+  }
+}

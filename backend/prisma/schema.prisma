@@ -1,0 +1,178 @@
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  USER
+  DRIVER
+  ADMIN
+}
+
+enum RideStatus {
+  REQUESTED
+  ACCEPTED
+  ARRIVING
+  ARRIVED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum DocumentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum VehicleCategory {
+  STANDARD
+  PREMIUM
+  LUXURY
+  XL
+}
+
+enum PaymentMethod {
+  WALLET
+  CARD
+  CASH
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+}
+
+model User {
+  id            String          @id @default(auto()) @map("_id") @db.ObjectId
+  email         String          @unique
+  passwordHash  String
+  name          String
+  phone         String          @unique
+  role          Role            @default(USER)
+  avatarUrl     String?
+  rating        Float           @default(5.0)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  
+  profile       Profile?
+  riderRides    Ride[]          @relation("RiderRides")
+  driverRides   Ride[]          @relation("DriverRides")
+  tickets       SupportTicket[]
+  notifications Notification[]
+}
+
+model Profile {
+  id             String         @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String         @unique @db.ObjectId
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  walletBalance  Float          @default(0.0)
+  referralCode   String         @unique
+  referredBy     String?
+  documentStatus DocumentStatus @default(PENDING)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  documents      DriverDocument[]
+  vehicle        Vehicle?
+}
+
+model DriverDocument {
+  id          String         @id @default(auto()) @map("_id") @db.ObjectId
+  profileId   String         @db.ObjectId
+  profile     Profile        @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  type        String         // "LICENSE", "INSURANCE", "REGISTRATION"
+  fileUrl     String
+  status      DocumentStatus @default(PENDING)
+  feedback    String?
+  verifiedAt  DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model Vehicle {
+  id           String          @id @default(auto()) @map("_id") @db.ObjectId
+  profileId    String          @unique @db.ObjectId
+  profile      Profile         @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  make         String
+  model        String
+  year         Int
+  licensePlate String          @unique
+  color        String
+  category     VehicleCategory @default(STANDARD)
+  isActive     Boolean         @default(false)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+}
+
+model Ride {
+  id             String          @id @default(auto()) @map("_id") @db.ObjectId
+  riderId        String          @db.ObjectId
+  rider          User            @relation("RiderRides", fields: [riderId], references: [id])
+  driverId       String?         @db.ObjectId
+  driver         User?           @relation("DriverRides", fields: [driverId], references: [id])
+  pickupAddress  String
+  dropoffAddress String
+  pickupCoords   Coords
+  dropoffCoords  Coords
+  status         RideStatus      @default(REQUESTED)
+  fare           Float
+  distance       Float           // in km
+  duration       Float           // in minutes
+  paymentStatus  PaymentStatus   @default(PENDING)
+  paymentMethod  PaymentMethod   @default(WALLET)
+  couponId       String?
+  promoDiscount  Float           @default(0.0)
+  scheduledAt    DateTime?
+  chatHistory    ChatMsg[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+type Coords {
+  lat Float
+  lng Float
+}
+
+type ChatMsg {
+  senderId  String
+  message   String
+  timestamp DateTime @default(now())
+}
+
+model PromoCode {
+  id             String    @id @default(auto()) @map("_id") @db.ObjectId
+  code           String    @unique
+  discountPercent Float
+  maxDiscount    Float
+  expiryDate     DateTime
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+}
+
+model SupportTicket {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject   String
+  message   String
+  status    String   @default("OPEN") // "OPEN", "RESOLVED"
+  reply     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Notification {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
