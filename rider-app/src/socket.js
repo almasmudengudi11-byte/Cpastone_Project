@@ -4,7 +4,7 @@ let socket = null;
 
 export function getSocket() {
   if (!socket) {
-    socket = io('/', { autoConnect: false });
+    socket = io(import.meta.env.VITE_SOCKET_URL || '/', { autoConnect: false });
   }
   return socket;
 }
