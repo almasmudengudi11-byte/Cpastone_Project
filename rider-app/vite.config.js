@@ -14,6 +14,11 @@ export default defineConfig({
     },
   },
   preview: {
-    allowedHosts: true,
+    allowedHosts: [
+      'capstone-rider-app.onrender.com',
+      'capstone-driver-app.onrender.com',
+      'capstone-rider-app.vercel.app',
+      'capstone-driver-app.vercel.app'
+    ],
   },
 })
