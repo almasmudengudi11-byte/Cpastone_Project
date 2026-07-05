@@ -41,9 +41,40 @@ router.post(
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-    const { pickup, dropoff } = req.body;
+    const { pickup, dropoff, serviceType, promoApplied } = req.body;
     const distance = haversineKm(pickup.lat, pickup.lng, dropoff.lat, dropoff.lng);
-    const fare = calcFare(distance);
+
+    // Calculate base and perKm rates based on serviceType
+    let base = 2.5;
+    let perKm = 1.2;
+    const sType = serviceType || 'Comfort';
+    if (sType === 'Eco') {
+      base = 1.5;
+      perKm = 0.8;
+    } else if (sType === 'Elite') {
+      base = 4.5;
+      perKm = 2.0;
+    } else if (sType === 'Moto') {
+      base = 1.0;
+      perKm = 0.5;
+    }
+
+    const rawFare = base + perKm * distance;
+    let discount = 0;
+
+    if (promoApplied) {
+      const code = promoApplied.toUpperCase();
+      if (code === 'WELCOME10') {
+        discount = rawFare * 0.10;
+      } else if (code === 'PREMIUM50' && sType === 'Elite') {
+        discount = Math.min(rawFare, 5.0);
+      } else if (code === 'SAVEMORE') {
+        discount = Math.min(rawFare * 0.20, 3.0);
+      }
+    }
+
+    const finalFare = Math.max(Math.round((rawFare - discount) * 100) / 100, 0.5);
+    const savedDiscount = Math.round(discount * 100) / 100;
 
     try {
       const ride = await Ride.create({
@@ -51,7 +82,10 @@ router.post(
         pickup,
         dropoff,
         distance: Math.round(distance * 100) / 100,
-        fare,
+        serviceType: sType,
+        promoApplied: promoApplied || null,
+        discount: savedDiscount,
+        fare: finalFare,
       });
 
       // Notify all connected drivers via socket
@@ -167,6 +201,18 @@ router.patch('/:id/status', requireAuth('driver'), async (req, res) => {
   }
 });
 
+// GET /api/rides/history  — rider retrieves past rides
+router.get('/history', requireAuth('rider'), async (req, res) => {
+  try {
+    const rides = await Ride.find({ rider: req.user.id })
+      .sort({ createdAt: -1 })
+      .populate('driver');
+    res.json(rides);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // PATCH /api/rides/:id/cancel  — rider cancels
 router.patch('/:id/cancel', requireAuth('rider'), async (req, res) => {
   try {
@@ -190,10 +236,12 @@ router.patch('/:id/cancel', requireAuth('rider'), async (req, res) => {
 
 // POST /api/rides/:id/rate  — rider rates driver after completion
 router.post('/:id/rate', requireAuth('rider'), async (req, res) => {
-  const { rating } = req.body;
+  const { rating, tip } = req.body;
   const stars = Number(rating);
   if (!stars || stars < 1 || stars > 5)
     return res.status(400).json({ error: 'Rating must be between 1 and 5' });
+
+  const tipAmount = Math.max(Number(tip) || 0, 0);
 
   try {
     const ride = await Ride.findOne({ _id: req.params.id, rider: req.user.id });
@@ -205,19 +253,25 @@ router.post('/:id/rate', requireAuth('rider'), async (req, res) => {
 
     ride.riderRating = stars;
     ride.isRated = true;
+    if (tipAmount > 0) {
+      ride.tip = Math.round(tipAmount * 100) / 100;
+    }
     await ride.save();
 
-    // Update driver rating as a weighted rolling average
+    // Update driver rating and add tip to earnings
     const driver = await Driver.findById(ride.driver);
     if (driver) {
       const prevTotal = driver.rating * driver.totalRides;
-      const newTotal = driver.totalRides + (driver.totalRides === 0 ? 1 : 0); // at least 1
       const count = Math.max(driver.totalRides, 1);
+      // If driver.totalRides was 0, count is 1. We update driver rating:
       driver.rating = Math.round(((prevTotal + stars) / (count + 1)) * 10) / 10;
+      if (tipAmount > 0) {
+        driver.totalEarnings = Math.round((driver.totalEarnings + tipAmount) * 100) / 100;
+      }
       await driver.save();
     }
 
-    res.json({ success: true, riderRating: stars });
+    res.json({ success: true, riderRating: stars, tip: tipAmount });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

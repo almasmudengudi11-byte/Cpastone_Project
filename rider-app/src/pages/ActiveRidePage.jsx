@@ -43,14 +43,18 @@ function StatusStep({ ride }) {
 function StarRating({ rideId, onDone }) {
   const [hovered, setHovered] = useState(0);
   const [selected, setSelected] = useState(0);
+  const [tip, setTip] = useState(0);
+  const [customTip, setCustomTip] = useState('');
+  const [showCustomInput, setShowCustomInput] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
   const submit = async () => {
     if (!selected) return;
     setSubmitting(true);
+    const finalTip = showCustomInput ? Number(customTip) || 0 : tip;
     try {
-      await api.post(`/rides/${rideId}/rate`, { rating: selected });
+      await api.post(`/rides/${rideId}/rate`, { rating: selected, tip: finalTip });
       setSubmitted(true);
       setTimeout(onDone, 1800);
     } catch {
@@ -109,12 +113,100 @@ function StarRating({ rideId, onDone }) {
         fontWeight: 600,
         color: 'var(--accent-light)',
         fontSize: '0.9rem',
-        marginBottom: '1.25rem',
+        marginBottom: '1rem',
         transition: 'opacity 0.2s',
         opacity: (hovered || selected) ? 1 : 0,
       }}>
         {labels[hovered || selected]}
       </p>
+
+      {/* Tipping Section */}
+      <div style={{ marginTop: '1rem', borderTop: '1px solid var(--border)', paddingTop: '1rem', marginBottom: '1.5rem' }}>
+        <p style={{ fontWeight: 600, fontSize: '0.95rem', marginBottom: '0.5rem', textAlign: 'left' }}>Add a Tip for your Driver</p>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'center', marginBottom: '0.75rem' }}>
+          {[1, 2, 5].map((amount) => {
+            const isSelected = tip === amount && !showCustomInput;
+            return (
+              <button
+                key={amount}
+                type="button"
+                onClick={() => {
+                  setTip(amount);
+                  setShowCustomInput(false);
+                }}
+                style={{
+                  padding: '0.4rem 0.85rem',
+                  borderRadius: 'var(--radius-sm)',
+                  background: isSelected ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.02)',
+                  border: isSelected ? '2px solid var(--success)' : '1px solid var(--border)',
+                  color: isSelected ? 'var(--success)' : 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  fontSize: '0.8rem',
+                  transition: 'var(--transition)'
+                }}
+              >
+                ${amount}
+              </button>
+            );
+          })}
+          <button
+            type="button"
+            onClick={() => {
+              setTip(0);
+              setShowCustomInput(true);
+            }}
+            style={{
+              padding: '0.4rem 0.85rem',
+              borderRadius: 'var(--radius-sm)',
+              background: showCustomInput ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.02)',
+              border: showCustomInput ? '2px solid var(--success)' : '1px solid var(--border)',
+              color: showCustomInput ? 'var(--success)' : 'var(--text-secondary)',
+              cursor: 'pointer',
+              fontWeight: 600,
+              fontSize: '0.8rem',
+              transition: 'var(--transition)'
+            }}
+          >
+            Custom
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setTip(0);
+              setShowCustomInput(false);
+              setCustomTip('');
+            }}
+            style={{
+              padding: '0.4rem 0.85rem',
+              borderRadius: 'var(--radius-sm)',
+              background: (tip === 0 && !showCustomInput) ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.02)',
+              border: (tip === 0 && !showCustomInput) ? '1px solid var(--text-secondary)' : '1px solid var(--border)',
+              color: (tip === 0 && !showCustomInput) ? 'var(--text-primary)' : 'var(--text-muted)',
+              cursor: 'pointer',
+              fontWeight: 600,
+              fontSize: '0.8rem',
+              transition: 'var(--transition)'
+            }}
+          >
+            No Tip
+          </button>
+        </div>
+        
+        {showCustomInput && (
+          <div style={{ display: 'flex', gap: '0.5rem', maxWidth: 140, margin: '0 auto' }}>
+            <span style={{ alignSelf: 'center', color: 'var(--text-secondary)' }}>$</span>
+            <input
+              type="number"
+              className="input"
+              placeholder="0.00"
+              value={customTip}
+              onChange={(e) => setCustomTip(e.target.value)}
+              style={{ padding: '0.35rem 0.5rem', fontSize: '0.85rem' }}
+            />
+          </div>
+        )}
+      </div>
 
       <div style={{ display: 'flex', gap: '0.75rem' }}>
         <button
@@ -133,7 +225,7 @@ function StarRating({ rideId, onDone }) {
           onClick={submit}
           disabled={!selected || submitting}
         >
-          {submitting ? <><div className="spinner" /> Submitting…</> : 'Submit Rating'}
+          {submitting ? <><div className="spinner" /> Submitting…</> : 'Submit'}
         </button>
       </div>
     </div>
@@ -358,7 +450,10 @@ export default function ActiveRidePage() {
         {/* Map */}
         <div style={{ height: 280 }}>
           <MapContainer center={mapCenter} zoom={14} style={{ height: '100%', width: '100%' }}>
-            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution="" />
+            <TileLayer
+              url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png"
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+            />
             <Marker position={[ride.pickup.lat, ride.pickup.lng]} icon={pickupIcon}>
               <Popup>📍 Pickup: {ride.pickup.address}</Popup>
             </Marker>

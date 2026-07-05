@@ -57,4 +57,24 @@ router.patch('/availability', requireAuth('driver'), async (req, res) => {
   }
 });
 
+// PATCH /api/drivers/vehicle  — update vehicle information
+router.patch('/vehicle', requireAuth('driver'), async (req, res) => {
+  const { make, model, plate, color } = req.body;
+  if (!make || !model || !plate || !color) {
+    return res.status(400).json({ error: 'All vehicle fields (make, model, plate, color) are required' });
+  }
+
+  try {
+    const driver = await Driver.findOneAndUpdate(
+      { user: req.user.id },
+      { vehicleInfo: { make, model, plate, color } },
+      { new: true }
+    );
+    if (!driver) return res.status(404).json({ error: 'Driver profile not found' });
+    res.json(driver);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;

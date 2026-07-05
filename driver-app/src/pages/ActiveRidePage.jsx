@@ -33,9 +33,12 @@ export default function ActiveRidePage() {
   const [routeCoordinates, setRouteCoordinates] = useState([]);
   const watchIdRef = useRef(null);
 
-  // Watch GPS and broadcast location
+  const [isSimulating, setIsSimulating] = useState(false);
+  const [simIndex, setSimIndex] = useState(0);
+
+  // Watch GPS and broadcast location (only when NOT simulating)
   useEffect(() => {
-    if (!ride) return;
+    if (!ride || isSimulating) return;
     const socket = getSocket();
 
     watchIdRef.current = navigator.geolocation?.watchPosition(
@@ -57,7 +60,56 @@ export default function ActiveRidePage() {
     return () => {
       if (watchIdRef.current) navigator.geolocation?.clearWatch(watchIdRef.current);
     };
-  }, [ride, user]);
+  }, [ride, user, isSimulating]);
+
+  // Route Simulation updates
+  useEffect(() => {
+    if (!isSimulating || routeCoordinates.length === 0 || !ride) return;
+    const socket = getSocket();
+
+    const interval = setInterval(() => {
+      setSimIndex((prevIndex) => {
+        const nextIndex = prevIndex + 1;
+        if (nextIndex >= routeCoordinates.length) {
+          clearInterval(interval);
+          setIsSimulating(false);
+          return prevIndex;
+        }
+
+        const [lat, lng] = routeCoordinates[nextIndex];
+        setMyLoc({ lat, lng });
+
+        // Update backend and socket
+        api.patch('/drivers/location', { lat, lng }).catch(() => {});
+        socket.emit('driver:location_update', {
+          driverId: user?.id,
+          lat, lng,
+          rideId: ride._id,
+        });
+
+        return nextIndex;
+      });
+    }, 1500);
+
+    return () => clearInterval(interval);
+  }, [isSimulating, routeCoordinates, ride, user]);
+
+  const handleToggleSimulation = () => {
+    if (!isSimulating) {
+      setSimIndex(0);
+      if (routeCoordinates.length > 0) {
+        const [lat, lng] = routeCoordinates[0];
+        setMyLoc({ lat, lng });
+        api.patch('/drivers/location', { lat, lng }).catch(() => {});
+        getSocket().emit('driver:location_update', {
+          driverId: user?.id,
+          lat, lng,
+          rideId: ride._id,
+        });
+      }
+    }
+    setIsSimulating(!isSimulating);
+  };
 
   // Listen for cancellation
   useEffect(() => {
@@ -123,6 +175,13 @@ export default function ActiveRidePage() {
 
   const completed = ride.status === 'completed';
 
+  const categoryDetails = {
+    Eco: { name: 'EcoRide', icon: '🚗' },
+    Comfort: { name: 'ComfortRide', icon: '🚘' },
+    Elite: { name: 'EliteRide', icon: '👑' },
+    Moto: { name: 'MotoRide', icon: '🏍️' }
+  }[ride.serviceType || 'Comfort'];
+
   return (
     <div className="page" style={{ paddingBottom: 80 }}>
       <nav className="navbar">
@@ -155,7 +214,10 @@ export default function ActiveRidePage() {
         {/* Map */}
         <div style={{ height: 300 }}>
           <MapContainer center={mapCenter} zoom={14} style={{ height: '100%', width: '100%' }}>
-            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution="" />
+            <TileLayer
+              url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png"
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+            />
             <Marker position={[ride.pickup.lat, ride.pickup.lng]} icon={pickupIcon}>
               <Popup>📍 Pickup: {ride.pickup.address}</Popup>
             </Marker>
@@ -176,10 +238,54 @@ export default function ActiveRidePage() {
           </MapContainer>
         </div>
 
+        {/* Simulation controller */}
+        {ride.status !== 'completed' && routeCoordinates.length > 0 && (
+          <div className="card animate-in" style={{
+            background: 'linear-gradient(135deg, rgba(139,92,246,0.1), rgba(16,185,129,0.1))',
+            border: '1px solid rgba(139,92,246,0.25)',
+            display: 'flex', flexDirection: 'column', gap: '0.75rem',
+            padding: '1.25rem'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ textAlign: 'left' }}>
+                <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                  <span>🤖</span> Demo Route Simulator
+                </h3>
+                <p className="text-xs text-muted" style={{ margin: '0.2rem 0 0' }}>
+                  {isSimulating 
+                    ? `Simulating... Step ${simIndex + 1} of ${routeCoordinates.length}`
+                    : 'Mock vehicle GPS along the route to test real-time tracking.'
+                  }
+                </p>
+              </div>
+              <button
+                type="button"
+                className={`btn btn-sm ${isSimulating ? 'btn-danger' : 'btn-primary'}`}
+                onClick={handleToggleSimulation}
+                style={{ background: isSimulating ? undefined : 'var(--success)', borderColor: isSimulating ? undefined : 'var(--success)' }}
+              >
+                {isSimulating ? 'Stop' : 'Start Simulation'}
+              </button>
+            </div>
+            {isSimulating && (
+              <div style={{ width: '100%', height: 4, background: 'rgba(255,255,255,0.06)', borderRadius: 2, overflow: 'hidden' }}>
+                <div style={{
+                  height: '100%',
+                  background: 'var(--success)',
+                  width: `${((simIndex + 1) / routeCoordinates.length) * 100}%`,
+                  transition: 'width 0.3s ease'
+                }} />
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Ride info */}
         <div className="card animate-in" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h2>Ride Info</h2>
+            <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', margin: 0 }}>
+              Ride Info {categoryDetails && <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--accent-light)' }}>({categoryDetails.icon} {categoryDetails.name})</span>}
+            </h2>
             <span className={`badge badge-${ride.status}`}>
               {ride.status.replace('_', ' ')}
             </span>
@@ -255,6 +361,10 @@ export default function ActiveRidePage() {
         <button className="bottom-nav-item" onClick={() => navigate('/earnings')}>
           <span className="bottom-nav-icon">💰</span>
           Earnings
+        </button>
+        <button className="bottom-nav-item" onClick={() => navigate('/settings')}>
+          <span className="bottom-nav-icon">⚙️</span>
+          Settings
         </button>
       </div>
     </div>

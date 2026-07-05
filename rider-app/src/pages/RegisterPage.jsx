@@ -34,11 +34,8 @@ export default function RegisterPage() {
   return (
     <div className="page" style={{ alignItems: 'center', justifyContent: 'center', padding: '2rem 1rem' }}>
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', overflow: 'hidden', zIndex: 0 }}>
-        <div style={{
-          position: 'absolute', width: 500, height: 500, borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 70%)',
-          top: '-15%', right: '-10%',
-        }} />
+        <div className="ambient-glow gold" style={{ width: 500, height: 500, top: '-15%', right: '-10%' }} />
+        <div className="ambient-glow bronze" style={{ width: 400, height: 400, bottom: '-10%', left: '-10%', animationDelay: '-5s' }} />
       </div>
 
       <div className="animate-in" style={{ width: '100%', maxWidth: 420, position: 'relative', zIndex: 1 }}>
@@ -46,8 +43,8 @@ export default function RegisterPage() {
           <div style={{
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
             width: 64, height: 64, borderRadius: 18,
-            background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)',
-            boxShadow: '0 8px 32px rgba(139,92,246,0.4)',
+            background: 'linear-gradient(135deg, var(--accent), var(--accent-dark))',
+            boxShadow: '0 8px 32px var(--accent-glow)',
             fontSize: '1.8rem', marginBottom: '1rem',
           }}>🚗</div>
           <h1 style={{ marginBottom: '0.4rem' }}>Create account</h1>

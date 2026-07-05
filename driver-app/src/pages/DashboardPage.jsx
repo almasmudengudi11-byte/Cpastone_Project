@@ -229,6 +229,10 @@ export default function DashboardPage() {
           <span className="bottom-nav-icon">💰</span>
           Earnings
         </button>
+        <button className="bottom-nav-item" onClick={() => navigate('/settings')}>
+          <span className="bottom-nav-icon">⚙️</span>
+          Settings
+        </button>
       </div>
     </div>
   );

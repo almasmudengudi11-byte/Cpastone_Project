@@ -30,6 +30,14 @@ const rideSchema = new mongoose.Schema(
     },
     fare: { type: Number, default: 0 },         // in USD
     distance: { type: Number, default: 0 },     // in km
+    serviceType: {
+      type: String,
+      enum: ['Eco', 'Comfort', 'Elite', 'Moto'],
+      default: 'Comfort',
+    },
+    promoApplied: { type: String, default: null },
+    discount: { type: Number, default: 0 },
+    tip: { type: Number, default: 0 },
     acceptedAt: { type: Date, default: null },
     startedAt: { type: Date, default: null },
     completedAt: { type: Date, default: null },

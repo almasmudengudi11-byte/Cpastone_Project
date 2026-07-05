@@ -1,3 +1,4 @@
+// Force reload JWT env
 require('dotenv').config();
 const express = require('express');
 const http = require('http');

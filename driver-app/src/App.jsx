@@ -6,6 +6,7 @@ import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import ActiveRidePage from './pages/ActiveRidePage';
 import EarningsPage from './pages/EarningsPage';
+import SettingsPage from './pages/SettingsPage';
 
 function PrivateRoute({ children }) {
   const { user } = useAuth();
@@ -27,6 +28,7 @@ function AppRoutes() {
       <Route path="/dashboard" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
       <Route path="/active" element={<PrivateRoute><ActiveRidePage /></PrivateRoute>} />
       <Route path="/earnings" element={<PrivateRoute><EarningsPage /></PrivateRoute>} />
+      <Route path="/settings" element={<PrivateRoute><SettingsPage /></PrivateRoute>} />
       <Route path="*" element={<Navigate to={user ? "/dashboard" : "/"} replace />} />
     </Routes>
   );

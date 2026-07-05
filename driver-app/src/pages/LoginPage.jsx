@@ -33,16 +33,8 @@ export default function LoginPage() {
   return (
     <div className="page" style={{ alignItems: 'center', justifyContent: 'center', padding: '2rem 1rem' }}>
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', overflow: 'hidden', zIndex: 0 }}>
-        <div style={{
-          position: 'absolute', width: 450, height: 450, borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(16,185,129,0.12) 0%, transparent 70%)',
-          top: '-10%', right: '-5%',
-        }} />
-        <div style={{
-          position: 'absolute', width: 350, height: 350, borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(6,182,212,0.1) 0%, transparent 70%)',
-          bottom: '0%', left: '-5%',
-        }} />
+        <div className="ambient-glow gold" style={{ width: 450, height: 450, top: '-10%', right: '-5%' }} />
+        <div className="ambient-glow bronze" style={{ width: 350, height: 350, bottom: '0%', left: '-5%', animationDelay: '-4s' }} />
       </div>
 
       <div className="animate-in" style={{ width: '100%', maxWidth: 420, position: 'relative', zIndex: 1 }}>
@@ -50,8 +42,8 @@ export default function LoginPage() {
           <div style={{
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
             width: 64, height: 64, borderRadius: 18,
-            background: 'linear-gradient(135deg, #10b981, #059669)',
-            boxShadow: '0 8px 32px rgba(16,185,129,0.4)',
+            background: 'linear-gradient(135deg, var(--accent), var(--accent-dark))',
+            boxShadow: '0 8px 32px var(--accent-glow)',
             fontSize: '1.8rem', marginBottom: '1rem',
           }}>🚕</div>
           <h1 style={{ marginBottom: '0.4rem' }}>Driver Portal</h1>

@@ -42,11 +42,8 @@ export default function RegisterPage() {
   return (
     <div className="page" style={{ alignItems: 'center', justifyContent: 'center', padding: '2rem 1rem' }}>
       <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', overflow: 'hidden', zIndex: 0 }}>
-        <div style={{
-          position: 'absolute', width: 400, height: 400, borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(16,185,129,0.1) 0%, transparent 70%)',
-          bottom: '-10%', right: '-5%',
-        }} />
+        <div className="ambient-glow gold" style={{ width: 400, height: 400, bottom: '-10%', right: '-5%' }} />
+        <div className="ambient-glow bronze" style={{ width: 350, height: 350, top: '-5%', left: '-10%', animationDelay: '-6s' }} />
       </div>
 
       <div className="animate-in" style={{ width: '100%', maxWidth: 440, position: 'relative', zIndex: 1 }}>
@@ -54,8 +51,8 @@ export default function RegisterPage() {
           <div style={{
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
             width: 64, height: 64, borderRadius: 18,
-            background: 'linear-gradient(135deg, #10b981, #059669)',
-            boxShadow: '0 8px 32px rgba(16,185,129,0.4)',
+            background: 'linear-gradient(135deg, var(--accent), var(--accent-dark))',
+            boxShadow: '0 8px 32px var(--accent-glow)',
             fontSize: '1.8rem', marginBottom: '1rem',
           }}>🚕</div>
           <h1 style={{ marginBottom: '0.4rem' }}>Become a Driver</h1>

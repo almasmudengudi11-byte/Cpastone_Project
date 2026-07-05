@@ -33,19 +33,9 @@ export default function LoginPage() {
   return (
     <div className="page" style={{ alignItems: 'center', justifyContent: 'center', padding: '2rem 1rem' }}>
       {/* Background orbs */}
-      <div style={{
-        position: 'fixed', inset: 0, pointerEvents: 'none', overflow: 'hidden', zIndex: 0,
-      }}>
-        <div style={{
-          position: 'absolute', width: 400, height: 400, borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(139,92,246,0.15) 0%, transparent 70%)',
-          top: '-10%', left: '-10%',
-        }} />
-        <div style={{
-          position: 'absolute', width: 350, height: 350, borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(109,40,217,0.1) 0%, transparent 70%)',
-          bottom: '5%', right: '-5%',
-        }} />
+      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', overflow: 'hidden', zIndex: 0 }}>
+        <div className="ambient-glow gold" style={{ width: 400, height: 400, top: '-10%', left: '-10%' }} />
+        <div className="ambient-glow bronze" style={{ width: 350, height: 350, bottom: '5%', right: '-5%', animationDelay: '-3s' }} />
       </div>
 
       <div className="animate-in" style={{ width: '100%', maxWidth: 420, position: 'relative', zIndex: 1 }}>
@@ -54,8 +44,8 @@ export default function LoginPage() {
           <div style={{
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
             width: 64, height: 64, borderRadius: 18,
-            background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)',
-            boxShadow: '0 8px 32px rgba(139,92,246,0.4)',
+            background: 'linear-gradient(135deg, var(--accent), var(--accent-dark))',
+            boxShadow: '0 8px 32px var(--accent-glow)',
             fontSize: '1.8rem', marginBottom: '1rem',
           }}>🚗</div>
           <h1 style={{ marginBottom: '0.4rem' }}>Welcome back</h1>
