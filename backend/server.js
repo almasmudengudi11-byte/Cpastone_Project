@@ -14,25 +14,32 @@ const initSocket = require('./socket/index');
 const app = express();
 const server = http.createServer(app);
 
-const io = new Server(server, {
-  cors: {
-    origin: [
-      process.env.CLIENT_RIDER_URL || 'http://localhost:5173',
-      process.env.CLIENT_DRIVER_URL || 'http://localhost:5174',
-    ],
-    methods: ['GET', 'POST', 'PATCH', 'DELETE'],
-    credentials: true,
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    const allowedPatterns = [
+      /^http:\/\/localhost:\d+$/,
+      /\.onrender\.com$/,
+      /\.vercel\.app$/
+    ];
+    const isAllowed = allowedPatterns.some(pattern => pattern.test(origin)) || 
+                      origin === process.env.CLIENT_RIDER_URL || 
+                      origin === process.env.CLIENT_DRIVER_URL;
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
   },
+  credentials: true,
+};
+
+const io = new Server(server, {
+  cors: corsOptions,
 });
 
 // Middleware
-app.use(cors({
-  origin: [
-    process.env.CLIENT_RIDER_URL || 'http://localhost:5173',
-    process.env.CLIENT_DRIVER_URL || 'http://localhost:5174',
-  ],
-  credentials: true,
-}));
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Attach io to requests so routes can emit events
