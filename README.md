@@ -8,9 +8,9 @@ An end-to-end, dual-facing **RideSharing Application** (an Uber/Lyft clone) buil
 
 The workspace is organized as a monorepo containing three core folders:
 
-*   **[`backend/`](file:///c:/Users/VERSH/OneDrive/Desktop/capstone/backend)**: Express.js server utilizing MongoDB (via Mongoose) and Socket.io for real-time location sharing and booking synchronization.
-*   **[`rider-app/`](file:///c:/Users/VERSH/OneDrive/Desktop/capstone/rider-app)**: React + Vite web client for passengers to select route coordinates, request rides, track drivers, and complete payments/ratings.
-*   **[`driver-app/`](file:///c:/Users/VERSH/OneDrive/Desktop/capstone/driver-app)**: React + Vite web client for drivers to toggle availability, receive incoming requests, track earnings, and navigate via interactive maps.
+*   **[`backend/`](./backend)**: Express.js server utilizing MongoDB (via Mongoose) and Socket.io for real-time location sharing and booking synchronization.
+*   **[`rider-app/`](./rider-app)**: React + Vite web client for passengers to select route coordinates, request rides, track drivers, and complete payments/ratings.
+*   **[`driver-app/`](./driver-app)**: React + Vite web client for drivers to toggle availability, receive incoming requests, track earnings, and navigate via interactive maps.
 
 ---
 
@@ -134,4 +134,4 @@ npm run dev
 ---
 
 ## 📄 Project Documentation PDF
-For an in-depth technical walkthrough of the backend API endpoints, database structures, and socket event names, please refer to the pre-generated **[project_documentation.pdf](file:///c:/Users/VERSH/OneDrive/Desktop/capstone/project_documentation.pdf)** located at the root of this project.
+For an in-depth technical walkthrough of the backend API endpoints, database structures, and socket event names, please refer to the pre-generated **[project_documentation.pdf](./project_documentation.pdf)** located at the root of this project.

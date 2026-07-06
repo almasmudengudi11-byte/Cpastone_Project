@@ -335,7 +335,7 @@ def generate_project_pdf(output_path):
     print(f"PDF generated successfully at: {output_path}")
 
 if __name__ == "__main__":
-    out = "c:\\Users\\VERSH\\OneDrive\\Desktop\\capstone\\project_documentation.pdf"
+    out = "project_documentation.pdf"
     if len(sys.argv) > 1:
         out = sys.argv[1]
     generate_project_pdf(out)
